@@ -1,40 +1,31 @@
+
+import oracledb from 'oracledb';
 import { getOracleConnection } from "@/lib/oracle";
 import { UserRepository } from "../interface/userRepository";
-import { roleType, User, UserInput } from "../types";
+import { roleType, User } from "../types";
+import { UserSchema } from '../dbschemas';
 
-
-type UserRow ={
-    ID:number;
-    NAME:string;
-    EMAIL:string;
-    ROLE: roleType;
-    DESCRIPTION:string;
-}
 
 
 export class OracleUserRepository implements UserRepository {
-    async create(user: UserInput):Promise<User|null> {
+    
+    async create(user: any):Promise<User|null> {
+        
         const conn = await getOracleConnection();
-        const result = await conn.execute<UserRow>(
-            `INSERT INTO users (email,name,description,role) values(:email, :name, :description,role)`,
-            {email:user.email,name:user.name,description:user.description||'',role:user.role || roleType.NORMAL},
-            {autoCommit:true}
+        const result = await conn.execute<User>(
+            `INSERT INTO users (email,name,description,role,password,salt) values(:email, :name, :description,:role,:password,:salt)`,
+            {email:user.email,name:user.name,description:'',role:user.role || roleType.NORMAL,password:user.password,salt:user.salt},
+            {autoCommit:true,outFormat:oracledb.OUT_FORMAT_OBJECT}
         )
         await conn.close();
         const row = result.rows?.[0];
         if(!row) return null;
-        const returnedUser: User = {
-            id:row.ID,
-            name:row.NAME,
-            email:row.EMAIL,
-            description:row.DESCRIPTION,
-            role:row.ROLE,
-        }
+        
 
-        return returnedUser
+        return row;
         
     }
-    async update(id: string, user: Partial<UserInput>): Promise<User> {
+    async update(id: string, user: Partial<User>): Promise<User> {
         throw new Error("Method not implemented.");
     }
     async delete(id: string): Promise<boolean> {
@@ -42,21 +33,34 @@ export class OracleUserRepository implements UserRepository {
     }
     async findByEmail(email:string):Promise<User|null|undefined> {
         const conn = await getOracleConnection();
-        const result = await conn.execute<UserRow>(
-            `SELECT * FROM users WHERE EMAIL = :email`,
+        const result = await conn.execute<User>(
+            `SELECT 
+                id AS "id",
+                email AS "email",
+                name AS "name",
+                password AS "password",
+                role AS "role",
+                salt AS "salt",
+                description AS "description"
+            FROM users WHERE EMAIL = :email AND ROWNUM = 1`,
             [email],
-
+            {outFormat: oracledb.OUT_FORMAT_OBJECT}
+            
         )
+        await conn.close();
         const row = result.rows?.[0] || null;
         if(!row) return null;
-        const returnedUser:User = {
-            id:row.ID,
-            name:row.NAME,
-            email:row.EMAIL,
-            description:row.DESCRIPTION,
-            role:row.ROLE,
+        
+        
+        
+        const parsedUser = UserSchema.safeParse(row);
+        
+        if(!parsedUser.success) {
+            console.error('Invalid user data:',parsedUser.error.errors);
+            return null;
         }
-        return returnedUser;
+        
+        return parsedUser.data;
     }
     
 }

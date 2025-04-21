@@ -1,4 +1,6 @@
-import SignInForm from '@/auth/SignInForm'
+'use client'
+import OAuthSignInForm from '@/auth/OAuthSignInForm'
+
 import { Button, TextField } from '@radix-ui/themes'
 import Link from 'next/link'
 
@@ -6,10 +8,12 @@ import Link from 'next/link'
 function LoginContent() {
   return (
     <div className='flex-center flex-col gap-4 p-4'>
-        <div className='font-bold text-3xl'>
+        <h1 className='font-bold text-3xl'>
           Sign In
-        </div>
-        <form action="" className='flex flex-col w-60'>
+        </h1>
+        <form action={() => {
+          
+        }} className='flex flex-col w-60'>
             <p className='mt-3 font-bold'>Email:</p>
             <TextField.Root name="email" placeholder='example@example.com'/>
       
@@ -31,8 +35,8 @@ function LoginContent() {
 
         </form>
         <div className='flex-center gap-2 mt-2'>
-          <SignInForm site={'google'}/>
-          <SignInForm site={'github'}/>
+          <OAuthSignInForm site={'google'}/>
+          <OAuthSignInForm site={'github'}/>
 
         </div>
 

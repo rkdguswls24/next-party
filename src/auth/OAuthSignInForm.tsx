@@ -1,11 +1,12 @@
 "use client"
-import { signInWithSite } from '@/lib/action'
+
+import { signInWithOAuthSite } from '@/lib/action'
 import React from 'react'
 
 
-function SignInForm({site}:{site:string}) {
+function OAuthSignInForm({site}:{site:string}) {
   return (
-    <form action={async () => { await signInWithSite(site)}}>
+    <form action={async () => { await signInWithOAuthSite(site)}}>
         <button 
             type='submit'
             className='rounded-lg text-white border px-4 py-2 bg-black'>
@@ -15,4 +16,4 @@ function SignInForm({site}:{site:string}) {
   )
 }
 
-export default SignInForm
+export default OAuthSignInForm;
