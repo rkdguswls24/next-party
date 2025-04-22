@@ -1,5 +1,6 @@
 import { z } from "zod";
-
+import { roleType } from "./types";
+const roleEnum = [roleType.ADMIN,roleType.NORMAL] as const
 export const UserSchema = z.object({
     id:z.number(),
     email: z.string().email(),
@@ -33,3 +34,9 @@ export const signUpSchema = z.object({
     password: z.string().min(8),
     role: z.string().optional(),
 })
+export const sessionSchema = z.object({
+    userid:z.string(),
+
+    role:z.string(),
+})
+
