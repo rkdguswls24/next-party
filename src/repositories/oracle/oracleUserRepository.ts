@@ -5,7 +5,13 @@ import { UserRepository } from "../interface/userRepository";
 import { roleType, User } from "../types";
 import { UserSchema } from '../dbschemas';
 
-
+const SELECT_USER_ALIAS = `id AS "id",
+                email AS "email",
+                name AS "name",
+                password AS "password",
+                role AS "role",
+                salt AS "salt",
+                description AS "description"`
 
 export class OracleUserRepository implements UserRepository {
     
@@ -75,6 +81,28 @@ export class OracleUserRepository implements UserRepository {
             return null;
         }
         
+        return parsedUser.data;
+    }
+    async findById(id: number): Promise<User | null | undefined> {
+        const conn = await getOracleConnection();
+        const result = await conn.execute<User>(
+            `SELECT 
+                ${SELECT_USER_ALIAS}
+            FROM users WHERE id = :id AND ROWNUM = 1
+            `,
+            {id:id},
+            {outFormat:oracledb.OUT_FORMAT_OBJECT}
+        )
+        await conn.close();
+        const row = result.rows?.[0];
+        if(!row) return null;
+        row.description = row.description || '';
+        const parsedUser = UserSchema.safeParse(row);
+        if(!parsedUser.success){
+            console.log('invalid user data',parsedUser.error.errors)
+            return null;
+        }
+
         return parsedUser.data;
     }
     

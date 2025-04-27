@@ -1,8 +1,8 @@
 
-import { UserSession } from '@/repositories/types'
-import crypto from 'crypto'
+
 import { sessionsv } from '../service'
 import { sessionSchema } from '@/repositories/dbschemas';
+import { generateRandomHexString } from './passwordHasher';
 
 
 const COOKIE_SESSION_KEY = "session-id";
@@ -24,22 +24,31 @@ export type Cookies = {
 }
 
 export async function createUserSession(user:any,cookies:Cookies) {
-    const sessionId = crypto.randomBytes(512).toString("hex").normalize()
+    //const sessionId = crypto.randomBytes(512).toString("hex").normalize()
+    const sessionId = generateRandomHexString(512)
     user.sessionid = sessionId;
     const expiredate = Date.now() + SESSION_EXPIRATION_SECONDS * 1000
     
     
     
     const result = await sessionsv.createSession(user,expiredate);
-
+    
     setCookie(sessionId,cookies);
 }   
 export function getUserFromSession(cookies:Pick<Cookies,"get">){
+    
     const sessionId = cookies.get(COOKIE_SESSION_KEY)?.value
     
     if(sessionId == null) return null
     
     return getUserSessionById(sessionId)
+
+}
+export async function removeUserFromSession(cookies:Pick<Cookies,"get"|"delete">){
+    const sessionId = cookies.get(COOKIE_SESSION_KEY)?.value;
+    if(sessionId == null) return null;
+    const result = await sessionsv.deleteSession(sessionId);
+    cookies.delete(COOKIE_SESSION_KEY);
 
 }
 
@@ -52,8 +61,6 @@ function setCookie(sessionId:string,cookies:Pick<Cookies,"set">){
     })
 }
 
-
-
 async function getUserSessionById(sessionId:string){
     const rawUser = await sessionsv.getSessionUser(sessionId)
     
@@ -61,3 +68,4 @@ async function getUserSessionById(sessionId:string){
     
     return success ? user : null;
 }
+

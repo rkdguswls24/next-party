@@ -15,4 +15,7 @@ export class SessionService {
         
         return this.sessionRepo.create(parseUser);
     }
+    async deleteSession(sessionId:string){
+        return this.sessionRepo.delete(sessionId)
+    }
 }

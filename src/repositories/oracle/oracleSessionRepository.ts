@@ -15,7 +15,9 @@ export class OracleSessionRepository implements SessionRepository {
                     userid AS "userid",
                     role AS "role"
                 FROM usersession
-                WHERE id = :id AND ROWNUM = 1
+                WHERE id = :id 
+                
+                AND ROWNUM = 1
                 `,
                 [id],
                 {outFormat:oracledb.OUT_FORMAT_OBJECT}
@@ -39,7 +41,7 @@ export class OracleSessionRepository implements SessionRepository {
         try{
             const result = await conn.execute<any>(
                 `INSERT INTO usersession (id,role,expiredate,userid) values(:id,:role,to_date(:expiredate,'YYYY-MM-DD HH24:MI:SS'),:userid)`,
-                {id:user.sessionid,role:user.role,expiredate:user.expiredate,userid:user.userid},
+                {id:user.sessionid,role:user.role,expiredate:user.expiredate,userid:user.id},
                 {autoCommit:true,outFormat:oracledb.OUT_FORMAT_OBJECT}
             )
             
@@ -68,8 +70,18 @@ export class OracleSessionRepository implements SessionRepository {
     update(id: string, user: Partial<UserSession>): Promise<UserSession> {
         throw new Error("Method not implemented.");
     }
-    delete(id: string): Promise<boolean> {
-        throw new Error("Method not implemented.");
+    async delete(id: string): Promise<boolean> {
+        const conn = await getOracleConnection();
+        const result = await conn.execute(
+            `DELETE FROM usersession
+                WHERE id = :id`,
+                {id}
+
+        )
+        await conn.close();
+        if(result.rowsAffected && result.rowsAffected > 0) return true;
+        
+        return false;
     }
     
 }

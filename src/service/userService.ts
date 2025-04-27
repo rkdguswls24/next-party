@@ -1,6 +1,6 @@
 import { generateSalt, hashPassword } from "@/lib/core/passwordHasher";
 import { UserRepository } from "@/repositories/interface/userRepository";
-import { OracleUserRepository } from "@/repositories/oracle/oracleUserRepository";
+
 import { SignUpInfo } from "@/repositories/types";
 
 
@@ -10,11 +10,13 @@ export class UserService {
     
     constructor(private readonly userRepo:UserRepository){}
     
-    async getUser(email:string) {
+    async getUserbyEmail(email:string) {
         
          return this.userRepo.findByEmail(email);
     }
-
+    async getUserbyId(id:number){
+        return this.userRepo.findById(id);
+    }
     async registerUser(data:SignUpInfo){
         
         
@@ -24,4 +26,5 @@ export class UserService {
         
         return this.userRepo.create(parseData);
     }
+    
 }
